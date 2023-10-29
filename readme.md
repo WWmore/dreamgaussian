@@ -1,27 +1,36 @@
 # DreamGaussian
 
 This repository contains the official implementation for [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
+[Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
 
-### [Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
-
-https://github.com/dreamgaussian/dreamgaussian/assets/25863658/db860801-7b9c-4b30-9eb9-87330175f5c8
-
-### News
-
-- 2023.10.21: add experimental support for [MVDream](https://github.com/bytedance/MVDream).
-
-### [Colab demo](https://github.com/camenduru/dreamgaussian-colab)
-
-- Image-to-3D: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1sLpYmmLS209-e5eHgcuqdryFRRO6ZhFS?usp=sharing)
-- Text-to-3D: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/camenduru/dreamgaussian-colab/blob/main/dreamgaussian_colab.ipynb)
-
-### [Gradio demo](https://huggingface.co/spaces/jiawei011/dreamgaussian)
-
-- Image-to-3D: <a href="https://huggingface.co/spaces/jiawei011/dreamgaussian"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Gradio%20Demo-Huggingface-orange"></a>
-- Run Gradio demo on Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1owXJthskHoVXBNvxUB0Bg0JP2Rc7QsTe?usp=sharing)
 
 ## Install
 
+* Hui: Windows 10 with torch 2.1 & CUDA 12.1 on a RTX A4500.
+
+* Hui: problem with pip install ./diff-gaussian-rasterization ./simple-knn --> need to install 'cuda_12.1.0_windows_network'
+
+* Hui: problem with diff_gaussian_rasterization and simple_knn._C path problem --> add __init__.py file inside folder diff-gaussian-rasterization and simple-knn
+
+### Setting environment
+
+```bash
+install 'cuda_12.1.0_windows_network'
+
+open anaconda prompt
+
+cd C:\Users\NAME
+
+git clone https://github.com/dreamgaussian/dreamgaussian --recursive
+
+cd cd C:\Users\NAME\dreamgaussian
+
+conda create -n dreamgaussian
+
+conda activate dreamgaussian
+```
+
+### Setting packages
 ```bash
 pip install -r requirements.txt
 
@@ -39,17 +48,11 @@ pip install git+https://github.com/NVlabs/nvdiffrast/
 pip install git+https://github.com/ashawkey/kiuikit
 ```
 
-Tested on:
 
-- Ubuntu 22 with torch 1.12 & CUDA 11.6 on a V100.
-- Windows 10 with torch 2.1 & CUDA 12.1 on a 3070.
+## Image-to-3D (`./configs/image.yaml`)
 
-## Usage
-
-Image-to-3D:
-
+1. Process the initial image: (below choose 1/3)
 ```bash
-### preprocess
 # background removal and recentering, save rgba at 256x256
 python process.py data/name.jpg
 
@@ -58,8 +61,11 @@ python process.py data/name.jpg --size 512
 
 # process all jpg images under a dir
 python process.py data
+```
 
-### training gaussian stage
+2. Train Gaussian stage: (below choose 1/4)
+
+```bash
 # train 500 iters (~1min) and export ckpt & coarse_mesh to logs
 python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name
 
@@ -71,8 +77,10 @@ python main.py --config configs/image.yaml load=logs/name_model.ply gui=True
 
 # use an estimated elevation angle if image is not front-view (e.g., common looking-down image can use -30)
 python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name elevation=-30
+```
 
-### training mesh stage
+3. Train mesh stage: (below choose 1/4)
+```bash
 # auto load coarse_mesh and refine 50 iters (~1min), export fine_mesh to logs
 python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name
 
@@ -84,8 +92,10 @@ python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=n
 
 # export glb instead of obj
 python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name mesh_format=glb
+```
 
-### visualization
+4. Visualization: (below choose 1/4)
+```bash
 # gui for visualizing mesh
 python -m kiui.render logs/name.obj
 
@@ -97,69 +107,4 @@ python -m kiui.render logs/name.obj --save images/name/ --wogui
 
 ### evaluation of CLIP-similarity
 python -m kiui.cli.clip_sim data/name_rgba.png logs/name.obj
-```
-
-Please check `./configs/image.yaml` for more options.
-
-Text-to-3D:
-
-```bash
-### training gaussian stage
-python main.py --config configs/text.yaml prompt="a photo of an icecream" save_path=icecream
-
-### training mesh stage
-python main2.py --config configs/text.yaml prompt="a photo of an icecream" save_path=icecream
-```
-
-Please check `./configs/text.yaml` for more options.
-
-Text-to-3D (MVDream):
-
-```bash
-### training gaussian stage
-python main.py --config configs/text_mv.yaml prompt="a plush toy of a corgi nurse" save_path=corgi_nurse
-
-### training mesh stage
-python main2.py --config configs/text_mv.yaml prompt="a plush toy of a corgi nurse" save_path=corgi_nurse
-```
-
-Please check `./configs/text_mv.yaml` for more options.
-
-Helper scripts:
-
-```bash
-# run all image samples (*_rgba.png) in ./data
-python scripts/runall.py --dir ./data --gpu 0
-
-# run all text samples (hardcoded in runall_sd.py)
-python scripts/runall_sd.py --gpu 0
-
-# export all ./logs/*.obj to mp4 in ./videos
-python scripts/convert_obj_to_video.py --dir ./logs
-```
-
-Gradio Demo:
-
-```bash
-python gradio_app.py
-```
-
-## Acknowledgement
-
-This work is built on many amazing research works and open-source projects, thanks a lot to all the authors for sharing!
-
-- [gaussian-splatting](https://github.com/graphdeco-inria/gaussian-splatting) and [diff-gaussian-rasterization](https://github.com/graphdeco-inria/diff-gaussian-rasterization)
-- [threestudio](https://github.com/threestudio-project/threestudio)
-- [nvdiffrast](https://github.com/NVlabs/nvdiffrast)
-- [dearpygui](https://github.com/hoffstadt/DearPyGui)
-
-## Citation
-
-```
-@article{tang2023dreamgaussian,
-  title={DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation},
-  author={Tang, Jiaxiang and Ren, Jiawei and Zhou, Hang and Liu, Ziwei and Zeng, Gang},
-  journal={arXiv preprint arXiv:2309.16653},
-  year={2023}
-}
 ```
