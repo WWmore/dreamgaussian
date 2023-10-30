@@ -48,9 +48,13 @@ pip install git+https://github.com/NVlabs/nvdiffrast/
 pip install git+https://github.com/ashawkey/kiuikit
 ```
 
+
 ## Image-to-3D
 
-Refer to `./configs/image.yaml`.
+Parameters are set in `./configs/image.yaml`.
+
+File structure of folder `./logs` is below:
+![File](docs_Hui/tree_logs.png)
 
 1. Process the initial image: (below choose 1/3)
 ```bash
