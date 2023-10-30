@@ -14,6 +14,12 @@ import rembg
 from cam_utils import orbit_camera, OrbitCamera
 from mesh_renderer import Renderer
 
+"""Hui notes of functions: 
+(AnacondaPrompt2) train: / load_input + train_step + prepare_train + save_model
+Still need to run zero123.py
+Need name_gaussian/name_mesh.obj, may/not need name_mesh_albedo.png, no need _mesh.mtl, _model
+"""
+
 class AnacondaPrompt2:
     def __init__(self, opt):
         self.opt = opt  # shared with the trainer's opt to support in-place modification of rendering parameters.

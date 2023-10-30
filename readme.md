@@ -56,7 +56,7 @@ Parameters are set in `./configs/image.yaml`.
 File structure of folder `./logs` is below:
 ![File](docs_Hui/tree_logs.png)
 
-1. Process the initial image: (below choose 1/3)
+### 1. Process the initial image: (below choose 1/3)
 ```bash
 # background removal and recentering, save rgba at 256x256
 python process.py data/name.png
@@ -71,7 +71,7 @@ python process.py data
 ```
 ![File](docs_Hui/step1.png)
 
-2. Train Gaussian stage: (below choose 1/5)
+### 2. Train Gaussian stage: (below choose 1/5)
 
 If donot need to show GUI, one can directly choose 1 of below 3 commonds:
 ```bash
@@ -101,7 +101,7 @@ python main.py --config configs/image.yaml load=name_gaussian/name_model.ply gui
 https://github.com/WWmore/dreamgaussian/assets/28695253/035a5fc8-b305-4b5f-a14d-35c0a9565bc4
 
 
-3. Train mesh stage: (below choose 1/5)
+### 3. Train mesh stage: (below choose 1/5)
 
 If donot need to show GUI, one can directly choose 1 of below 4 commonds:
 ```bash
@@ -131,7 +131,7 @@ python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=n
 https://github.com/WWmore/dreamgaussian/assets/28695253/db26e49f-703b-467b-885a-8301f70c5907
 
 
-4. Visualization: (below choose 1/3)
+### 4. Visualization: (below choose 1/3)
 ```bash
 # gui for visualizing mesh
 python -m kiui.render logs/name_mesh/name.obj
@@ -148,7 +148,7 @@ python -m kiui.render logs/name_mesh/name.obj --save logs/name/ --wogui
 
 https://github.com/WWmore/dreamgaussian/assets/28695253/a88cd3aa-8ef5-46e6-a706-f6620ba3ed02
 
-5. Evaluation
+### 5. Evaluation
 ```bash
 ### evaluation of CLIP-similarity
 ##Hui note: AttributeError: 'Namespace' object has no attribute 'force_cuda_rast'
