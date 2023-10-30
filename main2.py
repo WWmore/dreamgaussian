@@ -70,7 +70,7 @@ class GUI:
         if self.opt.prompt is not None:
             self.prompt = self.opt.prompt
         
-        if self.gui:
+        if self.gui: ##Hui: same structure as the one in main.py: "Save" is different; "gaussian scaling" is missing
             dpg.create_context()
             self.register_dpg()
             self.test_step()
@@ -347,7 +347,7 @@ class GUI:
 
         print(f"[INFO] save model to {path}.")
 
-    def register_dpg(self):
+    def register_dpg(self): ##Hui: GUI window (3D+panel) settings, including 1 HGroup() + 3VGroup()
         ### register texture
 
         with dpg.texture_registry(show=False):

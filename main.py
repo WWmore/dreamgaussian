@@ -16,6 +16,11 @@ from gs_renderer import Renderer, MiniCam
 from grid_put import mipmap_linear_grid_put_2d
 from mesh import Mesh, safe_normalize
 
+"""Hui notes of functions: 
+(GUI) render: /train_step + test_step;  gui/test_step + register_dpg(/seed_everything + prepare_train + load_input + save_model)
+(AnacondaPrompt) train: /train_step + prepare_train + save_model
+"""
+
 class GUI:
     def __init__(self, opt):
         self.opt = opt  # shared with the trainer's opt to support in-place modification of rendering parameters.
@@ -79,14 +84,14 @@ class GUI:
 
         if self.gui:
             dpg.create_context()
-            self.register_dpg()
-            self.test_step()
+            self.register_dpg() ##Hui: GUI window (3D+panel) settings
+            self.test_step() ##Hui: update texture every frame from self.buffer_image
 
     def __del__(self):
         if self.gui:
             dpg.destroy_context()
 
-    def seed_everything(self):
+    def seed_everything(self): ##Hui: only in GUI
         try:
             seed = int(self.seed)
         except:
@@ -101,7 +106,7 @@ class GUI:
 
         self.last_seed = seed
 
-    def prepare_train(self):
+    def prepare_train(self): ##Hui: in self.train() in anaconda prompt + GUI/start
 
         self.step = 0
 
@@ -162,7 +167,7 @@ class GUI:
             if self.enable_zero123:
                 self.guidance_zero123.get_img_embeds(self.input_img_torch)
 
-    def train_step(self):
+    def train_step(self): ##Hui: in anaconda prompt + GUI/self.render()
         starter = torch.cuda.Event(enable_timing=True)
         ender = torch.cuda.Event(enable_timing=True)
         starter.record()
@@ -291,7 +296,7 @@ class GUI:
         #     self.train_steps = train_steps
 
     @torch.no_grad()
-    def test_step(self):
+    def test_step(self): ##Hui: inside GUI (register_dpg) + GUI/self.render()
         # ignore if no need to update
         if not self.need_update:
             return
@@ -360,7 +365,7 @@ class GUI:
             )  # buffer must be contiguous, else seg fault!
 
     
-    def load_input(self, file):
+    def load_input(self, file): ##Hui: initialization
         # load image
         print(f'[INFO] load image from {file}...')
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
@@ -386,7 +391,7 @@ class GUI:
                 self.prompt = f.read().strip()
 
     @torch.no_grad()
-    def save_model(self, mode='geo', texture_size=1024):
+    def save_model(self, mode='geo', texture_size=1024): ##Huinote: setting in anaconda_prompt_print + the GUI panel
         os.makedirs(self.opt.outdir, exist_ok=True)
         if mode == 'geo':
             path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh.ply')
@@ -523,11 +528,11 @@ class GUI:
 
         else:
             path = os.path.join(self.opt.outdir, self.opt.save_path + '_model.ply')
-            self.renderer.gaussians.save_ply(path)
+            self.renderer.gaussians.save_ply(path) ##Huinote: save 3D Gaussian Splatting
 
         print(f"[INFO] save model to {path}.")
 
-    def register_dpg(self):
+    def register_dpg(self): ##Hui: GUI window (3D+panel) callback functions, including 1 HGroup() + 3VGroup()
         ### register texture
 
         with dpg.texture_registry(show=False):
@@ -543,7 +548,7 @@ class GUI:
 
         # the rendered image, as the primary window
         with dpg.window(
-            tag="_primary_window",
+            tag="_primary_window", ##Hui: GUI / 3D window
             width=self.W,
             height=self.H,
             pos=[0, 0],
@@ -559,7 +564,7 @@ class GUI:
         # control window
         with dpg.window(
             label="Control",
-            tag="_control_window",
+            tag="_control_window", ##Hui: GUI / panel
             width=600,
             height=self.H,
             pos=[self.W, 0],
@@ -577,14 +582,14 @@ class GUI:
 
             # timer stuff
             with dpg.group(horizontal=True):
-                dpg.add_text("Infer time: ")
+                dpg.add_text("Infer time: ") ##Hui: 1st HGroup()
                 dpg.add_text("no data", tag="_log_infer_time")
 
-            def callback_setattr(sender, app_data, user_data):
+            def callback_setattr(sender, app_data, user_data): ##Hui: what function?
                 setattr(self, user_data, app_data)
 
             # init stuff
-            with dpg.collapsing_header(label="Initialize", default_open=True):
+            with dpg.collapsing_header(label="Initialize", default_open=True): ##Hui: 2nd VGroup()
 
                 # seed stuff
                 def callback_set_seed(sender, app_data):
@@ -706,7 +711,7 @@ class GUI:
                     )
 
             # training stuff
-            with dpg.collapsing_header(label="Train", default_open=True):
+            with dpg.collapsing_header(label="Train", default_open=True): ##Hui: 3rd VGroup()
                 # lr and train button
                 with dpg.group(horizontal=True):
                     dpg.add_text("Train: ")
@@ -735,7 +740,7 @@ class GUI:
                     dpg.add_text("", tag="_log_train_log")
 
             # rendering options
-            with dpg.collapsing_header(label="Rendering", default_open=True):
+            with dpg.collapsing_header(label="Rendering", default_open=True): ##Hui: 4th VGroup()
                 # mode combo
                 def callback_change_mode(sender, app_data):
                     self.mode = app_data
@@ -860,7 +865,7 @@ class GUI:
 
         dpg.show_viewport()
 
-    def render(self):
+    def render(self): ##Hui: only in GUI
         assert self.gui
         while dpg.is_dearpygui_running():
             # update texture every frame
@@ -870,7 +875,7 @@ class GUI:
             dpg.render_dearpygui_frame()
     
     # no gui mode
-    def train(self, iters=500):
+    def train(self, iters=500): ##Hui: only in anaconda prompt
         if iters > 0:
             self.prepare_train()
             for i in tqdm.trange(iters):
@@ -895,7 +900,7 @@ if __name__ == "__main__":
 
     gui = GUI(opt)
 
-    if opt.gui:
+    if opt.gui: ##Hui: pop-up GUI window to do trainning
         gui.render()
-    else:
+    else: ##Hui: inside Anaconda Prompt to do trainning
         gui.train(opt.iters)
