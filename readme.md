@@ -1,6 +1,6 @@
 # DreamGaussian
 
-This repository contains the official implementation for [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
+Original implementation of the paper [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
 [Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
 
 
@@ -47,9 +47,10 @@ pip install git+https://github.com/NVlabs/nvdiffrast/
 # kiuikit
 pip install git+https://github.com/ashawkey/kiuikit
 ```
-![File](docs_Hui/step1.png)
 
-## Image-to-3D (`./configs/image.yaml`)
+## Image-to-3D
+
+Refer to `./configs/image.yaml`.
 
 1. Process the initial image: (below choose 1/3)
 ```bash
@@ -64,6 +65,7 @@ python process.py data/name.jpg --size 512
 # process all jpg images under a dir
 python process.py data
 ```
+![File](docs_Hui/step1.png)
 
 2. Train Gaussian stage: (below choose 1/4)
 
@@ -83,6 +85,8 @@ python main.py --config configs/image.yaml load=name_gaussian/name_model.ply gui
 python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name elevation=-30
 ```
 ![File](docs_Hui/step2.png)
+https://github.com/WWmore/dreamgaussian/assets/28695253/035a5fc8-b305-4b5f-a14d-35c0a9565bc4
+
 
 3. Train mesh stage: (below choose 1/4)
 ```bash
@@ -101,6 +105,8 @@ python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=n
 python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name mesh_format=glb
 ```
 ![File](docs_Hui/step3.png)
+https://github.com/WWmore/dreamgaussian/assets/28695253/db26e49f-703b-467b-885a-8301f70c5907
+
 
 4. Visualization: (below choose 1/3)
 ```bash
@@ -116,9 +122,20 @@ python -m kiui.render logs/name_mesh/name.obj --save_video logs/name.mp4 --wogui
 python -m kiui.render logs/name_mesh/name.obj --save logs/name/ --wogui
 ```
 ![File](docs_Hui/step4.png)
+https://github.com/WWmore/dreamgaussian/assets/28695253/a88cd3aa-8ef5-46e6-a706-f6620ba3ed02
 
 5. Evaluation
 ```bash
 ### evaluation of CLIP-similarity
+##Hui note: AttributeError: 'Namespace' object has no attribute 'force_cuda_rast'
 python -m kiui.cli.clip_sim data/name_rgba.png logs/name_mesh/name.obj
 ```
+
+## Conclusion
+
+* The whole process has GUI layouts to navigate, but the rotation is very sensitive.
+* Both training in Step2 (Gaussian) and Step3 (Mesh) are fast. Highly depends on the hardware.
+* However, both 3D Gaussian Splatting and generated mesh look bad. 
+* The mesh has a very large background area of blur texture.
+* Starting from 1 image to produce a mesh is not suitable for the parametric designed model.
+* Resolutions are low.
