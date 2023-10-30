@@ -85,6 +85,7 @@ python main.py --config configs/image.yaml load=name_gaussian/name_model.ply gui
 python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name elevation=-30
 ```
 ![File](docs_Hui/step2.png)
+
 https://github.com/WWmore/dreamgaussian/assets/28695253/035a5fc8-b305-4b5f-a14d-35c0a9565bc4
 
 
@@ -105,6 +106,7 @@ python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=n
 python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name mesh_format=glb
 ```
 ![File](docs_Hui/step3.png)
+
 https://github.com/WWmore/dreamgaussian/assets/28695253/db26e49f-703b-467b-885a-8301f70c5907
 
 
@@ -122,6 +124,7 @@ python -m kiui.render logs/name_mesh/name.obj --save_video logs/name.mp4 --wogui
 python -m kiui.render logs/name_mesh/name.obj --save logs/name/ --wogui
 ```
 ![File](docs_Hui/step4.png)
+
 https://github.com/WWmore/dreamgaussian/assets/28695253/a88cd3aa-8ef5-46e6-a706-f6620ba3ed02
 
 5. Evaluation
