@@ -47,14 +47,16 @@ pip install git+https://github.com/NVlabs/nvdiffrast/
 # kiuikit
 pip install git+https://github.com/ashawkey/kiuikit
 ```
-
+![File](docs_Hui/step1.png)
 
 ## Image-to-3D (`./configs/image.yaml`)
 
 1. Process the initial image: (below choose 1/3)
 ```bash
+#----------------------------------
 # background removal and recentering, save rgba at 256x256
 python process.py data/name.jpg
+#----------------------------------
 
 # save at a larger resolution
 python process.py data/name.jpg --size 512
@@ -66,45 +68,57 @@ python process.py data
 2. Train Gaussian stage: (below choose 1/4)
 
 ```bash
-# train 500 iters (~1min) and export ckpt & coarse_mesh to logs
-python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name
+# train 500 iters (~1min) and export ckpt & coarse_mesh to logs/name_gaussian
+python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name
 
+#----------------------------------
 # gui mode (supports visualizing training)
-python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name gui=True
+python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name gui=True
+#----------------------------------
 
 # load and visualize a saved ckpt
-python main.py --config configs/image.yaml load=logs/name_model.ply gui=True
+python main.py --config configs/image.yaml load=name_gaussian/name_model.ply gui=True
 
 # use an estimated elevation angle if image is not front-view (e.g., common looking-down image can use -30)
-python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name elevation=-30
+python main.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name elevation=-30
 ```
+![File](docs_Hui/step2.png)
 
 3. Train mesh stage: (below choose 1/4)
 ```bash
-# auto load coarse_mesh and refine 50 iters (~1min), export fine_mesh to logs
-python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name
+# auto load coarse_mesh and refine 50 iters (~1min), export fine_mesh to logs/name_mesh
+python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name_mesh/name
 
+#----------------------------------
 # specify coarse mesh path explicity
-python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name mesh=logs/name_mesh.obj
+python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name_mesh/name mesh=logs/name_gaussian/name_mesh.obj
+#----------------------------------
 
 # gui mode
-python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name gui=True
+python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name gui=True
 
 # export glb instead of obj
-python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name mesh_format=glb
+python main2.py --config configs/image.yaml input=data/name_rgba.png save_path=name_gaussian/name mesh_format=glb
 ```
+![File](docs_Hui/step3.png)
 
-4. Visualization: (below choose 1/4)
+4. Visualization: (below choose 1/3)
 ```bash
 # gui for visualizing mesh
-python -m kiui.render logs/name.obj
+python -m kiui.render logs/name_mesh/name.obj
 
+#----------------------------------
 # save 360 degree video of mesh (can run without gui)
-python -m kiui.render logs/name.obj --save_video name.mp4 --wogui
+python -m kiui.render logs/name_mesh/name.obj --save_video logs/name.mp4 --wogui
+#----------------------------------
 
 # save 8 view images of mesh (can run without gui)
-python -m kiui.render logs/name.obj --save images/name/ --wogui
+python -m kiui.render logs/name_mesh/name.obj --save logs/name/ --wogui
+```
+![File](docs_Hui/step4.png)
 
+5. Evaluation
+```bash
 ### evaluation of CLIP-similarity
-python -m kiui.cli.clip_sim data/name_rgba.png logs/name.obj
+python -m kiui.cli.clip_sim data/name_rgba.png logs/name_mesh/name.obj
 ```
