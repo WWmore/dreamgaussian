@@ -1,6 +1,13 @@
 import os
-import glob
 import argparse
+
+"""Hui note: running error
+
+  File "<stdin>", line 1
+    & C:/Users/NAME/AppData/Local/anaconda3/envs/dreamgaussian/python.exe c:/Users/NAME/dreamgaussian/scripts/runall.py
+    ^
+    SyntaxError: invalid syntax
+"""
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--gpu', default=0, type=int)
@@ -36,8 +43,10 @@ for name, prompt in prompts:
     print(f'======== processing {name} ========')
     # first stage
     os.system(f'CUDA_VISIBLE_DEVICES={args.gpu} python main.py --config configs/text_mv.yaml prompt="{prompt}" save_path={name}')
+
     # second stage
     os.system(f'CUDA_VISIBLE_DEVICES={args.gpu} python main2.py --config configs/text_mv.yaml  prompt="{prompt}" save_path={name}')
+    
     # export video
     mesh_path = os.path.join('logs', f'{name}.obj')
     os.makedirs('videos', exist_ok=True)

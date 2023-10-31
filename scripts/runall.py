@@ -2,6 +2,14 @@ import os
 import glob
 import argparse
 
+"""Hui note: running error
+
+  File "<stdin>", line 1
+    & C:/Users/NAME/AppData/Local/anaconda3/envs/dreamgaussian/python.exe c:/Users/NAME/dreamgaussian/scripts/runall.py
+    ^
+    SyntaxError: invalid syntax
+"""
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--dir', default='data', type=str, help='Directory where processed images are stored')
 parser.add_argument('--out', default='logs', type=str, help='Directory where obj files will be saved')
@@ -35,11 +43,13 @@ for file in files:
               f'--config {configs_dir}/image.yaml '
               f'input={file} '
               f'save_path={name} elevation={args.elevation}')
+    
     # second stage
     os.system(f'CUDA_VISIBLE_DEVICES={args.gpu} python main2.py '
               f'--config {configs_dir}/image.yaml '
               f'input={file} '
               f'save_path={name} elevation={args.elevation}')
+    
     # export video
     mesh_path = os.path.join(out_dir, f'{name}.obj')
     os.system(f'python -m kiui.render {mesh_path} '

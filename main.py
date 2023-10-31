@@ -14,7 +14,7 @@ from cam_utils import orbit_camera, OrbitCamera
 from gs_renderer import Renderer, MiniCam
 
 from grid_put import mipmap_linear_grid_put_2d
-from mesh import Mesh, safe_normalize
+from mesh import safe_normalize
 
 """Hui notes of functions: 
 (GUI) render: /train_step + test_step;  gui/test_step + register_dpg(/seed_everything + prepare_train + load_input + save_model)

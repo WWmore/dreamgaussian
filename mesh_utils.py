@@ -2,7 +2,7 @@ import numpy as np
 import pymeshlab as pml
 
 
-def poisson_mesh_reconstruction(points, normals=None):
+def poisson_mesh_reconstruction(points, normals=None): ##Hui: no use
     # points/normals: [N, 3] np.ndarray
 
     import open3d as o3d
@@ -40,7 +40,7 @@ def poisson_mesh_reconstruction(points, normals=None):
 
     return vertices, triangles
 
-
+ ##Hui: used in gs_renderer.py inside main.py
 def decimate_mesh(
     verts, faces, target, backend="pymeshlab", remesh=False, optimalplacement=True
 ):
@@ -84,7 +84,7 @@ def decimate_mesh(
 
     return verts, faces
 
-
+ ##Hui: used in gs_renderer.py inside main.py
 def clean_mesh(
     verts,
     faces,

@@ -14,10 +14,11 @@ from cam_utils import orbit_camera, OrbitCamera
 from gs_renderer import Renderer, MiniCam
 
 from grid_put import mipmap_linear_grid_put_2d
-from mesh import Mesh, safe_normalize
+from mesh import safe_normalize
 
 """Hui notes of functions: 
 (AnacondaPrompt) train: / load_input + train_step + prepare_train + save_model
+Pipeline: load_input --> train: --> prepare_train --> train_step --> save model
 """
 
 class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
@@ -32,6 +33,7 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
 
         # models
         self.device = torch.device("cuda")
+        self.bg_remover = None
 
         self.guidance_sd = None
         self.guidance_zero123 = None
@@ -41,7 +43,6 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
 
         # renderer
         self.renderer = Renderer(sh_degree=self.opt.sh_degree)
-        self.gaussain_scale_factor = 1
 
         # input image
         self.input_img = None
@@ -67,7 +68,7 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
             self.renderer.initialize(num_pts=self.opt.num_pts)
 
     def prepare_train(self): ##Hui: in self.train() in AnacondaPromt + GUI/start
-
+        ##Hui: to assian initial value to self.optimizer, self.fixed_cam, self.guidance_sd, self.guidance_zero123
         self.step = 0
 
         # setup training
@@ -245,7 +246,7 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
         print(f'[INFO] load image from {file}...')
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
         if img.shape[-1] == 3:
-            if self.bg_remover is None:
+            if self.bg_remover is None: ##Hui: self.bg_remover should have name_rgba.png, which is made from process.py
                 self.bg_remover = rembg.new_session()
             img = rembg.remove(img, session=self.bg_remover)
 
@@ -268,13 +269,13 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
     @torch.no_grad()
     def save_model(self, mode='geo', texture_size=1024): ##Huinote: setting in anaconda_prompt_print + the GUI panel
         os.makedirs(self.opt.outdir, exist_ok=True)
-        if mode == 'geo':
+        if mode == 'geo': ##Hui: no use here
             path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh.ply')
-            mesh = self.renderer.gaussians.extract_mesh(path, self.opt.density_thresh)
+            mesh = self.renderer.gaussians.extract_mesh(path, self.opt.density_thresh) ##Hui: use gs_renderer.py / mesh.py
             mesh.write_ply(path)
 
         elif mode == 'geo+tex':
-            path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh.' + self.opt.mesh_format)
+            path = os.path.join(self.opt.outdir, self.opt.save_path + '_mesh.' + self.opt.mesh_format) ##Hui: .mesh_format == .obj
             mesh = self.renderer.gaussians.extract_mesh(path, self.opt.density_thresh)
 
             # perform texture extraction
@@ -377,7 +378,7 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
             albedo = albedo.detach().cpu().numpy()
             mask = mask.detach().cpu().numpy()
 
-            # dilate texture
+            # dilate texture ##Hui: enlarge texture
             from sklearn.neighbors import NearestNeighbors
             from scipy.ndimage import binary_dilation, binary_erosion
 
@@ -399,9 +400,9 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
             albedo[tuple(inpaint_coords.T)] = albedo[tuple(search_coords[indices[:, 0]].T)]
 
             mesh.albedo = torch.from_numpy(albedo).to(self.device)
-            mesh.write(path)
+            mesh.write(path) ##Hui: save name_mesh.obj, name_mesh_albedo.png, name_mesh.mtl
 
-        else:
+        else: ##when mode='model'
             path = os.path.join(self.opt.outdir, self.opt.save_path + '_model.ply')
             self.renderer.gaussians.save_ply(path) ##Huinote: save 3D Gaussian Splatting
 
@@ -417,8 +418,8 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
             # do a last prune
             self.renderer.gaussians.prune(min_opacity=0.01, extent=1, max_screen_size=1)
         # save
-        self.save_model(mode='model')
-        self.save_model(mode='geo+tex')
+        self.save_model(mode='model') ##Hui: save name_model.ply
+        self.save_model(mode='geo+tex') ##Hui: save
         
 
 if __name__ == "__main__":

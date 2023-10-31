@@ -8,7 +8,7 @@ mesh:
 # estimated elevation angle for input image 
 elevation: 0
 # reference image resolution
-ref_size: 256
+ref_size: 512
 # density thresh for mesh extraction
 density_thresh: 1
 
@@ -20,7 +20,7 @@ save_path: ???
 ### Training
 # guidance loss weights (0 to disable)
 lambda_sd: 0
-mvdream: False
+mvdream: False ##Hui: error:  File "C:\Users\WANGH0M\dreamgaussian\guidance\zero123_utils.py", line 145, in train_step cc_emb = torch.cat([self.embeddings[0].repeat(batch_size, 1, 1), T], dim=-1) RuntimeError: Sizes of tensors must match except in dimension 2. Expected size 4 but got size 1 for tensor number 1 in the list.
 lambda_zero123: 1
 # training batch size per iter
 batch_size: 1

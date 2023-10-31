@@ -1,4 +1,4 @@
-import os
+import osextract_mesh
 import math
 import numpy as np
 from typing import NamedTuple
@@ -9,22 +9,25 @@ from torch import nn
 
 from diff_gaussian_rasterization import (
     GaussianRasterizationSettings,
-    GaussianRasterizer,
-)
+    GaussianRasterizer)
 from simple_knn._C import distCUDA2
 
 from sh_utils import eval_sh, SH2RGB, RGB2SH
-from mesh import Mesh
-from mesh_utils import decimate_mesh, clean_mesh
+from mesh import Mesh ##Hui: in extract_mesh
+from mesh_utils import decimate_mesh, clean_mesh ##Hui: in extract_mesh
 
 import kiui
+
+"""Hui note: 
+GaussianModel as gaussians in Renderer;
+Renderer used in main.py
+"""
 
 def inverse_sigmoid(x):
     return torch.log(x/(1-x))
 
 def get_expon_lr_func(
-    lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
-):
+    lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000):
     
     def helper(step):
         if lr_init == lr_final:

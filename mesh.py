@@ -4,6 +4,12 @@ import torch
 import trimesh
 import numpy as np
 
+"""Hui note:
+used in main.py, mesh_renderer.py--> main2.py
+in main.py: to save name_mesh.obj, name_mesh_albedo.png, name_mesh.mtl in `name_gaussian` folder
+in main2.py: to save name.obj, name_albedo.png, name.mtl in `name_mesh` folder
+"""
+
 def dot(x, y):
     return torch.sum(x * y, -1, keepdim=True)
 
