@@ -1,4 +1,4 @@
-import osextract_mesh
+import os
 import math
 import numpy as np
 from typing import NamedTuple
@@ -18,7 +18,7 @@ from mesh_utils import decimate_mesh, clean_mesh ##Hui: in extract_mesh
 
 import kiui
 
-"""Hui note: 
+"""Hui note the functions in this file: 
 GaussianModel as gaussians in Renderer;
 Renderer used in main.py
 """
@@ -26,7 +26,7 @@ Renderer used in main.py
 def inverse_sigmoid(x):
     return torch.log(x/(1-x))
 
-def get_expon_lr_func(
+def get_expon_lr_func( ##Hui: copy from utils/general_utils.py
     lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000):
     
     def helper(step):
@@ -50,7 +50,7 @@ def get_expon_lr_func(
     return helper
 
 
-def strip_lowerdiag(L):
+def strip_lowerdiag(L): ##Hui: copy from utils/general_utils.py
     uncertainty = torch.zeros((L.shape[0], 6), dtype=torch.float, device="cuda")
 
     uncertainty[:, 0] = L[:, 0, 0]
@@ -61,10 +61,10 @@ def strip_lowerdiag(L):
     uncertainty[:, 5] = L[:, 2, 2]
     return uncertainty
 
-def strip_symmetric(sym):
+def strip_symmetric(sym): ##Hui: copy from utils/general_utils.py
     return strip_lowerdiag(sym)
 
-def gaussian_3d_coeff(xyzs, covs):
+def gaussian_3d_coeff(xyzs, covs): ##Hui: dreamgaussian add; only used in extract_field->extract_mesh
     # xyzs: [N, 3]
     # covs: [N, 6]
     x, y, z = xyzs[:, 0], xyzs[:, 1], xyzs[:, 2]
@@ -85,7 +85,7 @@ def gaussian_3d_coeff(xyzs, covs):
         
     return torch.exp(power)
 
-def build_rotation(r):
+def build_rotation(r): ##Hui: copy from utils/general_utils.py
     norm = torch.sqrt(r[:,0]*r[:,0] + r[:,1]*r[:,1] + r[:,2]*r[:,2] + r[:,3]*r[:,3])
 
     q = r / norm[:, None]
@@ -108,7 +108,7 @@ def build_rotation(r):
     R[:, 2, 2] = 1 - 2 * (x*x + y*y)
     return R
 
-def build_scaling_rotation(s, r):
+def build_scaling_rotation(s, r): ##Hui: copy from utils/general_utils.py
     L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")
     R = build_rotation(r)
 
@@ -145,9 +145,9 @@ class GaussianModel:
         self.rotation_activation = torch.nn.functional.normalize
 
 
-    def __init__(self, sh_degree : int):
+    def __init__(self, sh_degree : int): ##Hui: should be 3 for max_sh_degree, otherwise Line442 error; should be 45, 3, 45
         self.active_sh_degree = 0
-        self.max_sh_degree = sh_degree  
+        self.max_sh_degree = 3 ##sh_degree  ##Hui: change from sh_degree to 3 for given .ply, but 0 for name_model.ply
         self._xyz = torch.empty(0)
         self._features_dc = torch.empty(0)
         self._features_rest = torch.empty(0)
@@ -219,7 +219,7 @@ class GaussianModel:
         return self.opacity_activation(self._opacity)
 
     @torch.no_grad()
-    def extract_fields(self, resolution=128, num_blocks=16, relax_ratio=1.5):
+    def extract_fields(self, resolution=128, num_blocks=16, relax_ratio=1.5): ##Hui: dreamgaussian add; only used in extract_mesh
         # resolution: resolution of field
         
         block_size = 2 / num_blocks
@@ -296,8 +296,8 @@ class GaussianModel:
 
         return occ
     
-    def extract_mesh(self, path, density_thresh=1, resolution=128, decimate_target=1e5):
-
+    def extract_mesh(self, path, density_thresh=1, resolution=128, decimate_target=1e5): ##Hui: dreamgaussian add; core fun.to get mesh
+        
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         occ = self.extract_fields(resolution).detach().cpu().numpy()
@@ -324,14 +324,14 @@ class GaussianModel:
 
         return mesh
     
-    def get_covariance(self, scaling_modifier = 1):
+    def get_covariance(self, scaling_modifier = 1): ##Hui: copy from gaussian_model.py
         return self.covariance_activation(self.get_scaling, scaling_modifier, self._rotation)
 
-    def oneupSHdegree(self):
+    def oneupSHdegree(self): ##Hui: copy from gaussian_model.py
         if self.active_sh_degree < self.max_sh_degree:
             self.active_sh_degree += 1
 
-    def create_from_pcd(self, pcd : BasicPointCloud, spatial_lr_scale : float = 1):
+    def create_from_pcd(self, pcd : BasicPointCloud, spatial_lr_scale : float = 1): ##Hui: copy from gaussian_model.py
         self.spatial_lr_scale = spatial_lr_scale
         fused_point_cloud = torch.tensor(np.asarray(pcd.points)).float().cuda()
         fused_color = RGB2SH(torch.tensor(np.asarray(pcd.colors)).float().cuda())
@@ -356,7 +356,7 @@ class GaussianModel:
         self._opacity = nn.Parameter(opacities.requires_grad_(True))
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
 
-    def training_setup(self, training_args):
+    def training_setup(self, training_args): ##Hui: copy from gaussian_model.py
         self.percent_dense = training_args.percent_dense
         self.xyz_gradient_accum = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
         self.denom = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
@@ -376,7 +376,7 @@ class GaussianModel:
                                                     lr_delay_mult=training_args.position_lr_delay_mult,
                                                     max_steps=training_args.position_lr_max_steps)
 
-    def update_learning_rate(self, iteration):
+    def update_learning_rate(self, iteration): ##Hui: copy from gaussian_model.py
         ''' Learning rate scheduling per step '''
         for param_group in self.optimizer.param_groups:
             if param_group["name"] == "xyz":
@@ -384,7 +384,7 @@ class GaussianModel:
                 param_group['lr'] = lr
                 return lr
 
-    def construct_list_of_attributes(self):
+    def construct_list_of_attributes(self): ##Hui: copy from gaussian_model.py
         l = ['x', 'y', 'z', 'nx', 'ny', 'nz']
         # All channels except the 3 DC
         for i in range(self._features_dc.shape[1]*self._features_dc.shape[2]):
@@ -398,7 +398,7 @@ class GaussianModel:
             l.append('rot_{}'.format(i))
         return l
 
-    def save_ply(self, path):
+    def save_ply(self, path): ##Hui: copy from gaussian_model.py
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         xyz = self._xyz.detach().cpu().numpy()
@@ -417,12 +417,12 @@ class GaussianModel:
         el = PlyElement.describe(elements, 'vertex')
         PlyData([el]).write(path)
 
-    def reset_opacity(self):
+    def reset_opacity(self): ##Hui: copy from gaussian_model.py
         opacities_new = inverse_sigmoid(torch.min(self.get_opacity, torch.ones_like(self.get_opacity)*0.01))
         optimizable_tensors = self.replace_tensor_to_optimizer(opacities_new, "opacity")
         self._opacity = optimizable_tensors["opacity"]
 
-    def load_ply(self, path):
+    def load_ply(self, path): ##Hui: copy from gaussian_model.py
         plydata = PlyData.read(path)
 
         xyz = np.stack((np.asarray(plydata.elements[0]["x"]),
@@ -438,7 +438,11 @@ class GaussianModel:
         features_dc[:, 2, 0] = np.asarray(plydata.elements[0]["f_dc_2"])
 
         extra_f_names = [p.name for p in plydata.elements[0].properties if p.name.startswith("f_rest_")]
+
+        ##general .ply should be 45,3,45; beacon_gaussian/beacon_model.ply should be 0, 0, 0
+        print('Hui check:', len(extra_f_names), self.max_sh_degree, 3*(self.max_sh_degree + 1) ** 2 - 3)
         assert len(extra_f_names)==3*(self.max_sh_degree + 1) ** 2 - 3
+
         features_extra = np.zeros((xyz.shape[0], len(extra_f_names)))
         for idx, attr_name in enumerate(extra_f_names):
             features_extra[:, idx] = np.asarray(plydata.elements[0][attr_name])
@@ -464,7 +468,7 @@ class GaussianModel:
 
         self.active_sh_degree = self.max_sh_degree
 
-    def replace_tensor_to_optimizer(self, tensor, name):
+    def replace_tensor_to_optimizer(self, tensor, name): ##Hui: copy from gaussian_model.py
         optimizable_tensors = {}
         for group in self.optimizer.param_groups:
             if group["name"] == name:
@@ -479,7 +483,7 @@ class GaussianModel:
                 optimizable_tensors[group["name"]] = group["params"][0]
         return optimizable_tensors
 
-    def _prune_optimizer(self, mask):
+    def _prune_optimizer(self, mask): ##Hui: copy from gaussian_model.py
         optimizable_tensors = {}
         for group in self.optimizer.param_groups:
             stored_state = self.optimizer.state.get(group['params'][0], None)
@@ -497,7 +501,7 @@ class GaussianModel:
                 optimizable_tensors[group["name"]] = group["params"][0]
         return optimizable_tensors
 
-    def prune_points(self, mask):
+    def prune_points(self, mask): ##Hui: copy from gaussian_model.py
         valid_points_mask = ~mask
         optimizable_tensors = self._prune_optimizer(valid_points_mask)
 
@@ -513,7 +517,7 @@ class GaussianModel:
         self.denom = self.denom[valid_points_mask]
         self.max_radii2D = self.max_radii2D[valid_points_mask]
 
-    def cat_tensors_to_optimizer(self, tensors_dict):
+    def cat_tensors_to_optimizer(self, tensors_dict): ##Hui: copy from gaussian_model.py
         optimizable_tensors = {}
         for group in self.optimizer.param_groups:
             assert len(group["params"]) == 1
@@ -535,6 +539,7 @@ class GaussianModel:
 
         return optimizable_tensors
 
+     ##Hui: copy from gaussian_model.py
     def densification_postfix(self, new_xyz, new_features_dc, new_features_rest, new_opacities, new_scaling, new_rotation):
         d = {"xyz": new_xyz,
         "f_dc": new_features_dc,
@@ -555,7 +560,7 @@ class GaussianModel:
         self.denom = torch.zeros((self.get_xyz.shape[0], 1), device="cuda")
         self.max_radii2D = torch.zeros((self.get_xyz.shape[0]), device="cuda")
 
-    def densify_and_split(self, grads, grad_threshold, scene_extent, N=2):
+    def densify_and_split(self, grads, grad_threshold, scene_extent, N=2): ##Hui: copy from gaussian_model.py
         n_init_points = self.get_xyz.shape[0]
         # Extract points that satisfy the gradient condition
         padded_grad = torch.zeros((n_init_points), device="cuda")
@@ -581,7 +586,7 @@ class GaussianModel:
         prune_filter = torch.cat((selected_pts_mask, torch.zeros(N * selected_pts_mask.sum(), device="cuda", dtype=bool)))
         self.prune_points(prune_filter)
 
-    def densify_and_clone(self, grads, grad_threshold, scene_extent):
+    def densify_and_clone(self, grads, grad_threshold, scene_extent): ##Hui: copy from gaussian_model.py
         # Extract points that satisfy the gradient condition
         selected_pts_mask = torch.where(torch.norm(grads, dim=-1) >= grad_threshold, True, False)
         selected_pts_mask = torch.logical_and(selected_pts_mask,
@@ -597,7 +602,7 @@ class GaussianModel:
 
         self.densification_postfix(new_xyz, new_features_dc, new_features_rest, new_opacities, new_scaling, new_rotation)
 
-    def densify_and_prune(self, max_grad, min_opacity, extent, max_screen_size):
+    def densify_and_prune(self, max_grad, min_opacity, extent, max_screen_size): ##Hui: copy from gaussian_model.py
         grads = self.xyz_gradient_accum / self.denom
         grads[grads.isnan()] = 0.0
 
@@ -613,7 +618,7 @@ class GaussianModel:
 
         torch.cuda.empty_cache()
 
-    def prune(self, min_opacity, extent, max_screen_size):
+    def prune(self, min_opacity, extent, max_screen_size): ##Hui: dreamgaussian new adds
 
         prune_mask = (self.get_opacity < min_opacity).squeeze()
         if max_screen_size:
@@ -625,11 +630,11 @@ class GaussianModel:
         torch.cuda.empty_cache()
 
 
-    def add_densification_stats(self, viewspace_point_tensor, update_filter):
+    def add_densification_stats(self, viewspace_point_tensor, update_filter): ##Hui: copy from gaussian_model.py
         self.xyz_gradient_accum[update_filter] += torch.norm(viewspace_point_tensor.grad[update_filter,:2], dim=-1, keepdim=True)
         self.denom[update_filter] += 1
 
-def getProjectionMatrix(znear, zfar, fovX, fovY):
+def getProjectionMatrix(znear, zfar, fovX, fovY): ##Hui: copy from graphics_utils.py; simplified calcuation
     tanHalfFovY = math.tan((fovY / 2))
     tanHalfFovX = math.tan((fovX / 2))
 
@@ -646,7 +651,7 @@ def getProjectionMatrix(znear, zfar, fovX, fovY):
 
 
 class MiniCam:
-    def __init__(self, c2w, width, height, fovy, fovx, znear, zfar):
+    def __init__(self, c2w, width, height, fovy, fovx, znear, zfar): ##Hui: partially copy from cameras.py/MiniCam
         # c2w (pose) should be in NeRF convention.
 
         self.image_width = width
@@ -674,7 +679,7 @@ class MiniCam:
         self.camera_center = -torch.tensor(c2w[:3, 3]).cuda()
 
 
-class Renderer:
+class Renderer: ##Hui: minor changed from gaussian_renderre.py/__init__.py
     def __init__(self, sh_degree=3, white_background=True, radius=1):
         
         self.sh_degree = sh_degree

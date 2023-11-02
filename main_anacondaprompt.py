@@ -24,26 +24,28 @@ Pipeline: load_input --> train: --> prepare_train --> train_step --> save model
 class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
     def __init__(self, opt):
         self.opt = opt  # shared with the trainer's opt to support in-place modification of rendering parameters.
-        self.W = opt.W
-        self.H = opt.H
+        self.W = opt.W ##Hui: 800 from image.yaml
+        self.H = opt.H ##Hui: 800 from image.yaml
         self.cam = OrbitCamera(opt.W, opt.H, r=opt.radius, fovy=opt.fovy)
 
-        self.mode = "image"
-        self.seed = "random"
+        self.mode = "image" ##Hui: no use
+        self.seed = "random" ##Hui: no use
 
         # models
         self.device = torch.device("cuda")
         self.bg_remover = None
 
-        self.guidance_sd = None
-        self.guidance_zero123 = None
+        ##Hui used for guidance loss
+        self.guidance_sd = None ##Hui: will be assigned False
+        self.guidance_zero123 = None ##Hui: will be assigned True
 
-        self.enable_sd = False
-        self.enable_zero123 = False
+        self.enable_sd = False ##Hui: will be assigned False
+        self.enable_zero123 = False ##Hui: will be assigned True
 
         # renderer
-        self.renderer = Renderer(sh_degree=self.opt.sh_degree)
-
+        self.renderer = Renderer(sh_degree=self.opt.sh_degree) ##Hui: sh_degree=0 in image.yaml
+        print(self.opt.sh_degree)
+        
         # input image
         self.input_img = None
         self.input_mask = None
@@ -89,12 +91,13 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
             self.cam.far,
         )
 
-        self.enable_sd = self.opt.lambda_sd > 0 and self.prompt != ""
-        self.enable_zero123 = self.opt.lambda_zero123 > 0 and self.input_img is not None
+        ##Hui: default setting from image.yaml shows that lambda_sd: 0; lambda_zero123: 1; 
+        self.enable_sd = self.opt.lambda_sd > 0 and self.prompt != "" ##Hui: False
+        self.enable_zero123 = self.opt.lambda_zero123 > 0 and self.input_img is not None ##Hui: True
 
         # lazy load guidance model
-        if self.guidance_sd is None and self.enable_sd:
-            if self.opt.mvdream:
+        if self.guidance_sd is None and self.enable_sd: ##Hui: False
+            if self.opt.mvdream: ##Hui no use
                 print(f"[INFO] loading MVDream...")
                 from guidance.mvdream_utils import MVDream
                 self.guidance_sd = MVDream(self.device)
@@ -105,7 +108,7 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
                 self.guidance_sd = StableDiffusion(self.device)
                 print(f"[INFO] loaded SD!")
 
-        if self.guidance_zero123 is None and self.enable_zero123:
+        if self.guidance_zero123 is None and self.enable_zero123: ##Hui: True
             print(f"[INFO] loading zero123...")
             from guidance.zero123_utils import Zero123
             self.guidance_zero123 = Zero123(self.device)
@@ -123,10 +126,10 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
         # prepare embeddings
         with torch.no_grad():
 
-            if self.enable_sd:
+            if self.enable_sd: ##Hui: False
                 self.guidance_sd.get_text_embeds([self.prompt], [self.negative_prompt])
 
-            if self.enable_zero123:
+            if self.enable_zero123: ##Hui: True
                 self.guidance_zero123.get_img_embeds(self.input_img_torch)
 
     def train_step(self): ##Hui: in AnacondaPromt + GUI/self.render()
@@ -210,13 +213,13 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
             # kiui.vis.plot_image(images)
 
             # guidance loss
-            if self.enable_sd:
+            if self.enable_sd: ##Hui: False
                 if self.opt.mvdream:
                     loss = loss + self.opt.lambda_sd * self.guidance_sd.train_step(images, poses, step_ratio)
                 else:
                     loss = loss + self.opt.lambda_sd * self.guidance_sd.train_step(images, step_ratio)
 
-            if self.enable_zero123:
+            if self.enable_zero123: ##Hui: True
                 loss = loss + self.opt.lambda_zero123 * self.guidance_zero123.train_step(images, vers, hors, radii, step_ratio)
             
             # optimize step
@@ -245,12 +248,12 @@ class AnacondaPromt: ##Hui: change class name GUI into AnacondaPromt
         # load image
         print(f'[INFO] load image from {file}...')
         img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
-        if img.shape[-1] == 3:
+        if img.shape[-1] == 3: ##Hui rgb color image: remove background
             if self.bg_remover is None: ##Hui: self.bg_remover should have name_rgba.png, which is made from process.py
                 self.bg_remover = rembg.new_session()
             img = rembg.remove(img, session=self.bg_remover)
 
-        img = cv2.resize(img, (self.W, self.H), interpolation=cv2.INTER_AREA)
+        img = cv2.resize(img, (self.W, self.H), interpolation=cv2.INTER_AREA) ##Hui: resize image to [w,h]=[800,800], but in data its[256,256]
         img = img.astype(np.float32) / 255.0
 
         self.input_mask = img[..., 3:]

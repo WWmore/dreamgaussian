@@ -257,6 +257,7 @@ class GUI:
             if self.enable_zero123:
                 loss = loss + self.opt.lambda_zero123 * self.guidance_zero123.train_step(images, vers, hors, radii, step_ratio)
             
+            print('Hui check: loss=', loss)
             # optimize step
             loss.backward()
             self.optimizer.step()

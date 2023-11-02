@@ -163,3 +163,20 @@ python -m kiui.cli.clip_sim data/name_rgba.png logs/name_mesh/name.obj
 * The mesh has a very large background area of blur texture.
 * Starting from 1 image to produce a mesh is not suitable for the parametric designed model.
 * Resolutions are low.
+
+
+---------------------------------------------------------
+
+# Get a mesh from given .ply file
+
+## Load a .ply file into GUI
+```bash
+python main.py --config configs/image.yaml load=logs/bonsai.ply save_path=name gui=True
+```
+
+## First training to get an initial mesh
+The `extract_mesh` function cannot help to get a good mesh:
+![File](docs_Hui/initial_mesh.png)
+
+## Second training to get a finer mesh
+TBD...
