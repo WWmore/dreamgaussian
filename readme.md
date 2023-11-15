@@ -3,6 +3,21 @@
 Original implementation of the paper [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
 [Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
 
+* [Install](#install)
+    * [Setting environment](#setting-environment)
+    * [Setting packages](#setting-packages)
+* [Image-to-3D](#image-to-3D)
+    * [1. Process the initial image](#image-to-3D)
+    * [2. Train Gaussian stage](#image-to-3D)
+    * [3. Train mesh stage](#image-to-3D)
+    * [4. Visualization](#image-to-3D)
+    * [5. Evaluation](#image-to-3D)   
+* [Conclusion](#conclusion)
+* [Get a mesh from given .ply file](#get-a-mesh-from-given-.ply-file)
+    * [Load a .ply file into GUI](#load-a-.ply-file-into-gui)
+    * [First training to get an initial mesh](#first-training-to-get-an-initial-mesh)
+    * [Second training to get a finer mesh](#second-training-to-get-a-finer-mesh)
+
 
 ## Install
 
@@ -167,16 +182,16 @@ python -m kiui.cli.clip_sim data/name_rgba.png logs/name_mesh/name.obj
 
 ---------------------------------------------------------
 
-# Get a mesh from given .ply file
+## Get a mesh from given .ply file
 
-## Load a .ply file into GUI
+### Load a .ply file into GUI
 ```bash
 python main.py --config configs/image.yaml load=logs/bonsai.ply save_path=name gui=True
 ```
 
-## First training to get an initial mesh
+### First training to get an initial mesh
 The `extract_mesh` function cannot help to get a good mesh:
 ![File](docs_Hui/initial_mesh.png)
 
-## Second training to get a finer mesh
-TBD...
+### Second training to get a finer mesh
+Stuck: Only after getting a good initial mesh, can process it to be a finer mesh.
