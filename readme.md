@@ -3,21 +3,22 @@
 Original implementation of the paper [DreamGaussian: Generative Gaussian Splatting for Efficient 3D Content Creation](https://arxiv.org/abs/2309.16653).
 [Project Page](https://dreamgaussian.github.io) | [Arxiv](https://arxiv.org/abs/2309.16653)
 
+---------------------------------------------------------------------------
 * [Install](#install)
     * [Setting environment](#setting-environment)
     * [Setting packages](#setting-packages)
 * [Image-to-3D](#image-to-3D)
-    * [1. Process the initial image](#image-to-3D)
-    * [2. Train Gaussian stage](#image-to-3D)
-    * [3. Train mesh stage](#image-to-3D)
-    * [4. Visualization](#image-to-3D)
-    * [5. Evaluation](#image-to-3D)   
+    * 1. Process the initial image
+    * 2. Train Gaussian stage
+    * 3. Train mesh stage
+    * 4. Visualization
+    * 5. Evaluation 
 * [Conclusion](#conclusion)
 * [Get a mesh from given .ply file](#get-a-mesh-from-given-.ply-file)
     * [Load a .ply file into GUI](#load-a-.ply-file-into-gui)
     * [First training to get an initial mesh](#first-training-to-get-an-initial-mesh)
     * [Second training to get a finer mesh](#second-training-to-get-a-finer-mesh)
-
+---------------------------------------------------------------------------
 
 ## Install
 
@@ -29,47 +30,60 @@ Original implementation of the paper [DreamGaussian: Generative Gaussian Splatti
 
 ### Setting environment
 
-```bash
-install 'cuda_12.1.0_windows_network'
+<details>
+<summary><span style="font-weight: bold;">Environment</span></summary>
 
-open anaconda prompt
+    ```bash
+    install 'cuda_12.1.0_windows_network'
 
-cd C:\Users\NAME
+    open anaconda prompt
 
-git clone https://github.com/dreamgaussian/dreamgaussian --recursive
+    cd C:\Users\NAME
 
-cd cd C:\Users\NAME\dreamgaussian
+    git clone https://github.com/dreamgaussian/dreamgaussian --recursive
 
-conda create -n dreamgaussian
+    cd cd C:\Users\NAME\dreamgaussian
 
-conda activate dreamgaussian
-```
+    conda create -n dreamgaussian
+
+    conda activate dreamgaussian
+    ```
+</details>
 
 ### Setting packages
-```bash
-pip install -r requirements.txt
 
-# a modified gaussian splatting (+ depth, alpha rendering)
-git clone --recursive https://github.com/ashawkey/diff-gaussian-rasterization
-pip install ./diff-gaussian-rasterization
+<details>
+<summary><span style="font-weight: bold;">Package</span></summary>
 
-# simple-knn
-pip install ./simple-knn
+    ```bash
+    pip install -r requirements.txt
 
-# nvdiffrast
-pip install git+https://github.com/NVlabs/nvdiffrast/
+    # a modified gaussian splatting (+ depth, alpha rendering)
+    git clone --recursive https://github.com/ashawkey/diff-gaussian-rasterization
+    pip install ./diff-gaussian-rasterization
 
-# kiuikit
-pip install git+https://github.com/ashawkey/kiuikit
-```
+    # simple-knn
+    pip install ./simple-knn
 
+    # nvdiffrast
+    pip install git+https://github.com/NVlabs/nvdiffrast/
+
+    # kiuikit
+    pip install git+https://github.com/ashawkey/kiuikit
+    ```
+
+</details>
 
 ## Image-to-3D
 
 Parameters are set in `./configs/image.yaml`.
 
-File structure of folder `./logs` is below:
-![File](docs_Hui/tree_logs.png)
+<details>
+<summary><span style="font-weight: bold;">File structure of folder `./logs`</span></summary>
+
+    ![File](docs_Hui/tree_logs.png)
+
+</details>
 
 ### 1. Process the initial image: (below choose 1/3)
 ```bash
