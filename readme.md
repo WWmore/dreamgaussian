@@ -81,7 +81,7 @@ Parameters are set in `./configs/image.yaml`.
 <details>
 <summary><span style="font-weight: bold;">File structure of folder `./logs`</span></summary>
 
-    ![File](docs_Hui/tree_logs.png)
+  ![File](docs_Hui/tree_logs.png)
 
 </details>
 
